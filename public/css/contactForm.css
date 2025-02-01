@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Work Sans', sans-serif;
+}
+
+body {
+    height: 100vh;
+}
+
+.form-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-top: 50px;
+}
+
+.contact-form h2 {
+    padding: 1rem;
+    font-size: 2rem;
+}
+
+.contact-form input {
+    outline: none;
+    border: 2px solid black;
+    height: 2.5rem;
+    width: 20rem;
+    margin: 3%;
+}
+
+.contact-form input:not(:last-child),
+.contact-form textarea {
+    padding: 3%;
+    font-size: 1rem;
+}
+
+.contact-form textarea {
+    margin: 3%;
+    width: 20rem;
+    outline: none;
+    border: 2px solid black;
+}
+
+.contact-form input:last-child {
+    cursor: pointer;
+    background-color: inherit;
+    height: 3rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.contact-form input:last-child:hover {
+    background-color: black;
+    color: white;
+}

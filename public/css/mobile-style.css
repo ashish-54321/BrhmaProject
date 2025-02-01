@@ -1,0 +1,101 @@
+@media only screen and (max-width: 768px) {
+  header .navbar-brand {
+    padding-left: 1rem;
+  }
+
+  .section-1 .row .col-md-6 .panel {
+    position: initial;
+    width: initial;
+    height: initial;
+  }
+
+  .section-2 .cover {
+    background-position: -25vmin -10vmin;
+  }
+
+  .numbers .rect {
+    width: 10rem;
+    height: fit-content;
+  }
+
+  .numbers .rect h1 {
+    font-size: 2rem;
+  }
+
+  .section-3 {
+    height: inherit;
+    padding: 10vmin !important;
+  }
+
+  .section-3 .row h1 {
+    padding-bottom: 5px;
+    padding-top: 5px;
+  }
+}
+
+.section-3 .platform .col-md-6 {
+  text-align: center !important;
+}
+
+.section-3 .desktop i {
+  font-size: 8vmin;
+}
+
+.section-4 .carousel-item {
+  padding-left: 0.6rem;
+}
+
+footer .row .col-md-2 {
+  margin-top: 8vmin;
+}
+
+
+/* screen size 375px */
+
+@media only screen and (max-width: 375px) {
+  .section-4 .card {
+    width: 18em;
+  }
+}
+
+@media only screen and (max-width: 320px) {
+  .section-4 .carousel-inner {
+    margin-left: -4vmin;
+  }
+}
+
+/* ****** [ Under line hover effect on  laptop only] */
+
+@media screen and (min-width: 1024px) {
+  header .nav-link {
+    text-decoration: none;
+    position: relative;
+  }
+
+  header .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 2px;
+    background-color: #fff;
+    visibility: hidden;
+    transform: scaleX(0);
+    transition: all 0.3s ease-in-out;
+  }
+
+  header .nav-link:hover::after {
+    visibility: visible;
+    transform: scaleX(1);
+  }
+}
+
+
+/* Media query for mobile and tablets */
+@media (max-width: 1024px) {
+
+  .navbar-collapse {
+    background: linear-gradient(to right, #e66465, #9198e5);
+  }
+}

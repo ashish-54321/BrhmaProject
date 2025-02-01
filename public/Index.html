@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Jangra sabah</title>
+  <!-- All CDN Links -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Main Style files -->
+  <link rel="stylesheet" href="/css/Style.css" />
+  <link rel="stylesheet" href="/css/mobile-style.css">
+  <link rel="stylesheet" href="/css/searchIcon.css">
+</head>
+
+<body>
+  <header>
+    <div class="container-fluid p-0">
+
+      <!-- *********************** [ NavBar Start Hear ] ***************** -->
+      <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#"> <img
+              src="../assets/Screenshot_2022-12-07_at_11.01.40_AM-removebg-preview-1.png" width="125px" alt="icon" />
+            <div>Jangra sabah</div>
+          </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll"
+            aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarScroll">
+            <ul class="navbar-nav me-auto my-2 my-lg-0  ms-auto" style="--bs-scroll-height: 100px;">
+              <li class="nav-item">
+                <a class="nav-link " aria-current="page" href="#">HOME</a>
+              </li>
+
+              <li class="nav-item dropdown">
+                <a class="nav-link " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  ABOUT
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#">About Us</a></li>
+                  <li>
+                    <hr class="dropdown-divider">
+                  </li>
+                  <li><a class="dropdown-item" href="#">Founder Visionary</a></li>
+
+                  <li><a class="dropdown-item" href="#">Privacy Policy</a></li>
+                </ul>
+              </li>
+              <li class="nav-item dropdown">
+                <button class="nav-link " role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  COMMUNITY
+                </button>
+                <ul class="dropdown-menu">
+
+                  <li><a class="dropdown-item" href="#" id="scrollButton">Add Community Member</a></li>
+                  <li><a class="dropdown-item" href="./Community.html">Community Members</a></li>
+
+                </ul>
+              </li>
+
+
+              <li class="nav-item dropdown">
+                <a class="nav-link " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  INFORMATION/NEWS
+                </a>
+                <ul class="dropdown-menu">
+
+                  <li><a class="dropdown-item" href="#">Notice Information</a></li>
+                  <li><a class="dropdown-item" href="#">News</a></li>
+
+                </ul>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="Pages/contactform.html ">CONTACT</a>
+              </li>
+
+            </ul>
+
+          </div>
+        </div>
+      </nav>
+
+    </div>
+
+    <div class="container text-center ">
+      <div class="row">
+        <div class="col-md-7 col-sm-12  text-white">
+          <h6>REMEMBERING OUR FOUNDER VISIONARY</h6>
+          <h1>Brahmanand Jangid</h1>
+          <p>
+            A social reformer, educational visionary and a great philanthropist, Brahmanand Jangid is the light that is
+            guiding us through the way forward. While he is no more with us, his rich legacy is being carried forward by
+            everyone connected
+
+            with Jangra saba family.
+          </p>
+
+          <div class="input-container">
+            <input placeholder="Search something..." class="input" name="text" type="text" id="myInput">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+              <g stroke-width="0" id="SVGRepo_bgCarrier"></g>
+              <g stroke-linejoin="round" stroke-linecap="round" id="SVGRepo_tracerCarrier"></g>
+              <g id="SVGRepo_iconCarrier">
+                <rect fill="white"></rect>
+                <path
+                  d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM9 11.5C9 10.1193 10.1193 9 11.5 9C12.8807 9 14 10.1193 14 11.5C14 12.8807 12.8807 14 11.5 14C10.1193 14 9 12.8807 9 11.5ZM11.5 7C9.01472 7 7 9.01472 7 11.5C7 13.9853 9.01472 16 11.5 16C12.3805 16 13.202 15.7471 13.8957 15.31L15.2929 16.7071C15.6834 17.0976 16.3166 17.0976 16.7071 16.7071C17.0976 16.3166 17.0976 15.6834 16.7071 15.2929L15.31 13.8957C15.7471 13.202 16 12.3805 16 11.5C16 9.01472 13.9853 7 11.5 7Z"
+                  clip-rule="evenodd" fill-rule="evenodd"></path>
+              </g>
+            </svg>
+          </div>
+
+        </div>
+
+        <div class="col-md-5 col-sm-12  h-25">
+          <img src="../assets/Dr-O.P.-Bhalla-removebg-preview.png" alt="Book" class="fade-in" id="image" />
+        </div>
+      </div>
+    </div>
+
+  </header>
+  <main>
+    <section class="section-1">
+      <div class="container text-center">
+        <div class="row">
+          <div class="col-md-6 col-12">
+            <div class="pray">
+              <img src="../assets/SPONSOR-A-STUDENT-Instagram-Post.png" alt="Pray" />
+            </div>
+          </div>
+          <div class="col-md-6 col-12">
+            <div class="panel text-left">
+              <h1>What is Jangra Sabha</h1>
+              <p class="pt-4">
+
+                Welcome to <strong> Jangra Sabha</strong>, a dedicated platform designed to bring together and celebrate
+                the Jangid
+                Brahmin community
+                in Faridabad. Our website serves as a comprehensive database, providing detailed information about
+                approximately 500
+                Jangid Brahmin families in the region.
+
+                We strive to ensure that the family details are kept accurate and up-to-date, offering a reliable
+                resource for community
+                members to connect, share, and stay informed. Whether you're looking for family histories, contact
+                information, or other
+                essential updates, <strong> Jangra Sabha</strong> is here to help foster a sense of unity and belonging
+                within our
+                community.
+
+                Stay connected with us as we continue to grow and strengthen our shared heritage!
+              </p>
+
+              <a href="./Community.html" class="btn btn-light px-5 py-2 primary-btn" style="background-color: yellow;">
+                List Of Members </a>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="section-2 container-fluid p-0">
+      <div class="cover">
+
+        <!-- Carosole Image Sliding With fade Effect  Start  -->
+        <div id="carouselExampleAutoplaying" class="carousel slide carousel-fade" data-bs-ride="carousel">
+          <div class="carousel-inner">
+
+            <div class="carousel-item active" data-bs-interval="500">
+
+              <img class="caroImg" src="../assets/slide1.jpg" alt="...">
+              <div class="overlay">
+                <div class="content text-center">
+                  <h1>Through detailed family records, we strengthen the bond of our Jangid Brahmin community,
+                    celebrating our shared heritage
+                    and traditions.</h1>
+                  <p>
+                    <b>Jangra sabah</b>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="carousel-item  " data-bs-interval="500">
+              <img src="../assets/slide2.jpg" class="caroImg" alt="...">
+              <div class="overlay">
+                <div class="content text-center">
+                  <h1>Every family detail is a step towards preserving the rich history and cultural identity of Jangid
+                    Brahmins in Faridabad.</h1>
+                  <p>
+                    <b>Jangra sabah</b>
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="carousel-item  " data-bs-interval="500">
+              <img src="../assets/slide3.jpg" class="caroImg" alt="...">
+              <div class="overlay">
+                <div class="content text-center">
+                  <h1>Staying informed about our community helps us stay connected, empowered, and ready to support one
+                    another.</h1>
+                  <p>
+                    <b>Jangra sabah</b>
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying"
+              data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying"
+              data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+
+        </div> <!-- carosule Image Slider End hear !-->
+
+        <div class="container-fluid text-center">
+          <div class="numbers d-flex flex-md-row flex-wrap justify-content-center">
+            <div class="rect">
+              <h1 class="count-numbers" data-number="500">0</h1>
+              <p>Jangid Brahmin in Faridabad</p>
+
+            </div>
+            <div class="rect">
+              <h1 class="count-numbers" data-number="820">0</h1>
+              <p>Total Jangid Brahmin </p>
+            </div>
+            <div class="rect">
+              <h1 class="count-numbers" data-number="320">0</h1>
+              <p>Total Jangid Brahmin in Delhi</p>
+            </div>
+          </div>
+        </div>
+
+    </section>
+    <section class="section-3 container-fluid p-0 text-center">
+      <div class="row">
+
+        <div class="col-md-12 col-sm-12">
+          <img src="../assets/book.png" alt="" style="
+        height:50%;
+        width: 25%; " />
+          <h1>STAY UPDATED!</h1>
+          <p>
+            Never miss an update from the Jangra Sabha community! Our platform is regularly updated with the latest
+            information
+            about Jangid Brahmin families in Faridabad. From new family additions to important announcements, we ensure
+            you stay
+            informed and connected.
+
+            Be a part of our growing network and stay updated on community events, celebrations, and initiatives.
+            Bookmark our
+            website and check back often for the latest details!
+
+            Together, let's keep our community informed and united!
+          </p>
+          <button href="order.html" class="btn btn-light px-5 py-2 primary-btn" style="
+          margin-bottom: 10px;
+      "> LEARN MORE </button>
+
+        </div>
+      </div>
+
+
+    </section>
+
+    <!-- Section 4 -->
+    <section class="section-4" id="familyScroled">
+      <div class="container text-center">
+        <h1 class="text-dark">Family Description</h1>
+        <hr class="rounded">
+      </div>
+      <div class="team row ">
+
+        <!-- From Uiverse.io by ammarsaa -->
+        <form class="form">
+          <p class="title">Add Head Of Family Detail </p>
+          <p class="message">Fill Complete Details only for Jangid Brahmin community</p>
+          <div class="flex">
+            <label>
+              <input class="input" type="text" placeholder="" required="">
+              <span>Firstname</span>
+            </label>
+
+            <label>
+              <input class="input" type="text" placeholder="" required="">
+              <span>Lastname</span>
+            </label>
+          </div>
+
+          <label>
+            <input class="input" type="text" placeholder="" required="">
+            <span>Current Resident</span>
+          </label>
+
+          <label>
+            <input class="input" type="text" placeholder="" required="">
+            <span>Native Resident</span>
+          </label>
+
+          <!-- Upload Image Icon -->
+
+          <!-- From Uiverse.io by csemszepp -->
+          <label for="file" class="custum-file-upload">
+            <div class="icon">
+              <svg viewBox="0 0 24 24" fill="" xmlns="http://www.w3.org/2000/svg">
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM14 15.5C14 14.1193 15.1193 13 16.5 13C17.8807 13 19 14.1193 19 15.5V16V17H20C21.1046 17 22 17.8954 22 19C22 20.1046 21.1046 21 20 21H13C11.8954 21 11 20.1046 11 19C11 17.8954 11.8954 17 13 17H14V16V15.5ZM16.5 11C14.142 11 12.2076 12.8136 12.0156 15.122C10.2825 15.5606 9 17.1305 9 19C9 21.2091 10.7909 23 13 23H20C22.2091 23 24 21.2091 24 19C24 17.1305 22.7175 15.5606 20.9844 15.122C20.7924 12.8136 18.858 11 16.5 11Z"
+                    fill=""></path>
+                </g>
+              </svg>
+            </div>
+            <div class="text">
+              <span>Click to upload image</span>
+            </div>
+            <input id="file" type="file">
+          </label>
+
+          <div class="preview-container">
+            <img id="preview" src="" alt="Image Preview">
+          </div>
+
+
+          <button class="submitbtn">Submit</button>
+
+        </form>
+
+        <div class="containerFamily">
+          <h1>Family Members</h1>
+          <button id="addMember" class="btnAdd">Add Member</button>
+          <table id="memberTable" class="responsive-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Member Name</th>
+                <th>Relation</th>
+                <th>Gotra</th>
+                <th>Qualification</th>
+                <th>Age</th>
+                <th>Occupation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be added dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+
+      </div>
+    </section>
+  </main>
+
+
+
+  <!-- *************[ footer Start Hear ] ************** -->
+
+  <div class="footer-dark">
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-6 col-md-3 item">
+
+          </div>
+          <div class="col-md-6 item text">
+
+          </div>
+          <div class="col item social"><a href="#"><i class="icon ion-social-facebook"></i></a><a href="#"><i
+                class="icon ion-social-twitter"></i></a><a href="#"><i class="icon ion-social-snapchat"></i></a><a
+              href="#"><i class="icon ion-social-instagram"></i></a></div>
+        </div>
+
+      </div>
+    </footer>
+  </div>
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="footer-col">
+          <h4>company</h4>
+          <ul>
+            <li><a href="#">About us</a></li>
+            <li><a href="#">Our services</a></li>
+            <li><a href="file:///D:/Desktop/web%20page/privacy%20policy.html">privacy policy</a></li>
+            <li><a href="#">Affiliate program</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>get help</h4>
+          <ul>
+            <li><a href="file:///D:/Desktop/web%20page/contact.html">CONTACT</a></li>
+
+            <li><a href="https://www.google.com/">GOOGLE 🔎Search</a></li>
+
+          </ul>
+        </div>
+
+
+        <div class="footer-col">
+          <h4>follow us</h4>
+          <div class="social-links">
+            <a href="#"><i class="fa fa-facebook-f"></i></a>
+            <a href="#"><i class="fa fa-twitter"></i></a>
+            <a href="#"><i class="fa fa-instagram"></i></a>
+            <a href="#"><i class="fa fa-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </footer>
+
+
+  <!-- copyright Year Automate Come's hear from js -->
+  <p class="copyright"> </p>
+
+
+  <!--  Java Script Tag linking  -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+    crossorigin="anonymous"></script>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/main.js"></script>
+
+
+</body>
+
+</html>
