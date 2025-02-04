@@ -46,16 +46,7 @@ const FamilySchema = new mongoose.Schema({
 
 const Family = mongoose.model("Family", FamilySchema);
 
-function delay(minutes) {
-    return new Promise(resolve => setTimeout(resolve, minutes * 60 * 1000));
-}
 
-async function keepAlive() {
-    const speek = await axios.get(`https://brhmaproject.onrender.com`)
-    console.log(speek.data);
-    await delay(14);
-    keepAlive();
-}
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -197,6 +188,3 @@ app.get('/search-family-details', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
-
-
-keepAlive()
