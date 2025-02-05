@@ -1,6 +1,5 @@
 const express = require('express');
 const multer = require("multer");
-const axios = require('axios');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config(); // Load environment variables from .env file
@@ -12,6 +11,9 @@ const port = 3000;
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// Admin Log In Only
+const setEmail = "test@54";
+const setPassword = "123456";
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -47,7 +49,6 @@ const FamilySchema = new mongoose.Schema({
 const Family = mongoose.model("Family", FamilySchema);
 
 
-
 // Root endpoint
 app.get('/', (req, res) => {
     res.status(200).send('Ashish Api Live');
@@ -59,8 +60,16 @@ app.get('/', (req, res) => {
 app.post("/submit-details", upload.single("image"), async (req, res) => {
     try {
         // Extract data from the request
-        const { firstname, lastname, currentResident, nativeResident, familyMembers } = req.body;
+        const { firstname, lastname, currentResident, nativeResident, familyMembers, email, password } = req.body;
         const imageBuffer = req.file ? req.file.buffer : null;
+
+        if (!email || !password) {
+            return res.status(404).json({ message: "Please Provide username and Password" });
+        }
+
+        if (setEmail !== email || setPassword !== password) {
+            return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
+        }
 
         // Validate required fields
         if (!firstname || !lastname || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
@@ -182,6 +191,142 @@ app.get('/search-family-details', async (req, res) => {
         res.status(500).json({ error: "An error occurred while fetching family details." });
     }
 });
+
+app.post('/login', async (req, res) => {
+
+    try {
+        // Extract data from the request
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+
+            return res.status(404).json({
+                message: "All Fileds Required",
+                adminStatus: false
+            });
+        }
+
+
+
+        if (setEmail === email && setPassword === password) {
+
+            // Respond with the fetched data
+            res.status(200).json({
+                message: "Admin Login Successful",
+                adminStatus: true
+            });
+
+        } else {
+            // Respond with the fetched data
+            res.status(200).json({
+                message: "Invalid Credentials",
+                adminStatus: false
+            });
+
+        }
+
+    } catch (error) {
+        console.error("Error In Login Api :", error);
+
+        // Respond with the fetched data
+        res.status(500).json({
+            message: "Internal Server Error",
+            adminStatus: false
+        });
+
+    }
+
+})
+
+
+// Update API
+app.post("/update-family-member", async (req, res) => {
+    const { firstname, lastname, current, native, member, relation, age, qualification, gotra, occupation, ticket, memberId, familyId, email, password } = req.body;
+    if (!email || !password) {
+        return res.status(404).json({ message: "Please Provide username and Password" });
+    }
+
+    if (setEmail !== email || setPassword !== password) {
+        return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
+    }
+
+    if (ticket === "head") {
+
+        if (!firstname || !lastname || !current || !native || !familyId) {
+            return res.status(400).json({ message: "All fields are required!" });
+        }
+        const message = await updateHead(familyId, req.body);
+        return res.status(200).json({ message });
+
+    } else if (ticket === 'member') {
+
+        if (!member || !relation || !age || !qualification || !gotra || !occupation || !memberId || !familyId) {
+            return res.status(400).json({ message: "All fields are required!" });
+        }
+        const message = await updateMember(familyId, req.body, memberId)
+        return res.status(200).json({ message });
+    } else {
+        return res.status(400).json({ message: "Bad Request Ticket Required" });
+    }
+
+
+
+});
+
+
+async function updateHead(id, data) {
+    try {
+
+        // Update the family record
+        const updatedFamily = await Family.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    firstname: data.firstname,
+                    lastname: data.lastname,
+                    currentResident: data.current,
+                    nativeResident: data.native,
+                }
+            },
+            { new: true } // Return the updated document
+        );
+        if (updatedFamily) {
+            return "Details Updated Successfully";
+        }
+        return "Details Not Updated User Not Found . Try Again Later";
+    } catch (error) {
+        console.error("Error updating family details:", error);
+        return "Internal Server Error. Try Again Later";
+    }
+
+}
+async function updateMember(id, data, memberId) {
+    try {
+        const updatedFamily = await Family.findOneAndUpdate(
+            { _id: id, "familyMembers._id": memberId },
+            {
+                $set: {
+                    "familyMembers.$.occupation": data.occupation,
+                    "familyMembers.$.name": data.member,
+                    "familyMembers.$.gotra": data.gotra,
+                    "familyMembers.$.relation": data.relation,
+                    "familyMembers.$.qualification": data.qualification,
+                    "familyMembers.$.age": data.age,
+                },
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedFamily) {
+            return "Family Member Not Found . Try Again later";
+        }
+        return "Updated Family Member Successfully";
+    } catch (error) {
+        console.error("Error updating family member details:", error);
+        return "Internal Server Error. Try Again Later";
+    }
+
+}
 
 
 // Start the server
