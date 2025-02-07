@@ -5,15 +5,15 @@ const cors = require('cors');
 require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT;
 
 // Use memory storage instead of disk storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Admin Log In Only
-const setEmail = "test@54";
-const setPassword = "123456";
+const setEmail = process.env.ADMIN_EMAIL;
+const setPassword = process.env.ADMIN_PASSWORD;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -265,13 +265,59 @@ app.post("/update-family-member", async (req, res) => {
         }
         const message = await updateMember(familyId, req.body, memberId)
         return res.status(200).json({ message });
-    } else {
+    } else if (ticket === 'new') {
+
+        if (!member || !relation || !age || !qualification || !gotra || !occupation || !familyId) {
+            return res.status(400).json({ message: "All fields are required!" });
+        }
+        const message = await updateNewMember(familyId, req.body)
+        return res.status(200).json({ message });
+    }
+    else {
         return res.status(400).json({ message: "Bad Request Ticket Required" });
     }
 
 
 
 });
+
+
+async function updateNewMember(id, data) {
+
+    try {
+        // Find the family document by ID
+        const family = await Family.findById(id);
+
+        if (!family) {
+            return "Family not found"
+        }
+
+        // Create the new family member object
+        const newFamilyMember = {
+            name: data.member,
+            relation: data.relation,
+            gotra: data.gotra,
+            qualification: data.qualification,
+            age: data.age,
+            occupation: data.occupation,
+        };
+
+        // Add the new member to the familyMembers array
+        family.familyMembers.push(newFamilyMember);
+
+        // Save the updated document
+        await family.save();
+        return "Family member added successfully"
+
+    } catch (error) {
+        console.error("Error adding family member:", error);
+        return "Internal Server Error. Try Again Later";
+    }
+
+
+}
+
+
 
 
 async function updateHead(id, data) {
@@ -327,6 +373,34 @@ async function updateMember(id, data, memberId) {
     }
 
 }
+
+// DELETE API to delete a family document by _id
+app.post("/api/family/delete", async (req, res) => {
+    try {
+        const { id, email, password } = req.body;
+
+        if (!email || !id || !password) {
+            return res.status(400).json({ message: "Bad Request. Check Perameters All Param Required" });
+        }
+
+        if (setEmail !== email || setPassword !== password) {
+            return res.status(400).json({ message: "Invalid credentials. Please contact to the admin." });
+        }
+
+        // Find and delete the family document by _id
+        const deletedFamily = await Family.findByIdAndDelete(id);
+
+        if (!deletedFamily) {
+            return res.status(404).json({ message: "Family document not found" });
+        }
+
+        res.status(200).json({ message: "Family details deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting family document:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
 
 
 // Start the server
