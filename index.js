@@ -2,6 +2,8 @@ const express = require('express');
 const multer = require("multer");
 const mongoose = require('mongoose');
 const cors = require('cors');
+const cloudinary = require("cloudinary").v2;
+const streamifier = require("streamifier");
 require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
@@ -14,6 +16,14 @@ const upload = multer({ storage: storage });
 // Admin Log In Only
 const setEmail = process.env.ADMIN_EMAIL;
 const setPassword = process.env.ADMIN_PASSWORD;
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME, // Replace with your Cloudinary cloud name
+    api_key: process.env.API_KEY,       // Replace with your Cloudinary API key
+    api_secret: process.env.API_SECRET, // Replace with your Cloudinary API secret
+});
+
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -38,12 +48,13 @@ const FamilyMemberSchema = new mongoose.Schema({
 });
 
 const FamilySchema = new mongoose.Schema({
+    fullname: { type: String, required: true },
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
     currentResident: { type: String, required: true },
     nativeResident: { type: String, required: true },
     familyMembers: { type: [FamilyMemberSchema], required: true },
-    image: { type: Buffer }, // To store the image in binary format
+    image: { type: String }, // To store the image in binary format
 });
 
 const Family = mongoose.model("Family", FamilySchema);
@@ -61,7 +72,6 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
     try {
         // Extract data from the request
         const { firstname, lastname, currentResident, nativeResident, familyMembers, email, password } = req.body;
-        const imageBuffer = req.file ? req.file.buffer : null;
 
         if (!email || !password) {
             return res.status(404).json({ message: "Please Provide username and Password" });
@@ -75,18 +85,44 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
         if (!firstname || !lastname || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
             return res.status(400).json({ error: "All fields are required, including at least one family member." });
         }
+        let result = null; // Declare the result variable outside the block
+
+
+        if (req.file) {
+            // Upload the image to Cloudinary with automatic format and quality optimization
+            result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: "optimized-images", // Optional folder in Cloudinary
+                        transformation: [
+                            { format: "auto", quality: "auto" }, // Apply auto format and quality optimization
+                        ],
+                    },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+
+                streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+            });
+
+        }
+
+        const imageUrl = req.file ? result.secure_url : null;
 
         // Parse family members (they arrive as JSON in req.body)
         const parsedFamilyMembers = JSON.parse(familyMembers);
 
         // Create a new Family document
         const newFamily = new Family({
+            fullname: `${firstname} ${lastname}`,
             firstname,
             lastname,
             currentResident,
             nativeResident,
             familyMembers: parsedFamilyMembers,
-            image: imageBuffer,
+            image: imageUrl,
         });
 
         // Save the document to the database
@@ -106,21 +142,15 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
 // API endpoint to fetch all family details with base64 image
 app.get('/get-family-details', async (req, res) => {
     try {
-        // Fetch all family details from the database
-        const families = await Family.find();
-
-        // Map the families to include the base64-encoded image
-        const familyDetailsWithImages = families.map(family => {
-            return {
-                ...family.toObject(),
-                image: family.image ? family.image.toString('base64') : null
-            };
-        });
+        // Fetch only specific fields from all documents in the Family collection
+        const families = await Family.find().select(
+            "firstname lastname image nativeResident currentResident"
+        );
 
         // Respond with the fetched data
         res.status(200).json({
             message: "Family details retrieved successfully!",
-            data: familyDetailsWithImages,
+            data: families,
         });
     } catch (error) {
         console.error("Error fetching family details:", error);
@@ -141,16 +171,11 @@ app.get('/get-family-details/:id', async (req, res) => {
             return res.status(404).json({ error: "Family not found." });
         }
 
-        // Include base64-encoded image
-        const familyDetailsWithImage = {
-            ...family.toObject(),
-            image: family.image ? family.image.toString('base64') : null
-        };
 
         // Respond with the fetched data
         res.status(200).json({
             message: "Family details retrieved successfully!",
-            data: familyDetailsWithImage,
+            data: family,
         });
     } catch (error) {
         console.error("Error fetching family details:", error);
@@ -163,28 +188,22 @@ app.get('/search-family-details', async (req, res) => {
     try {
         const searchText = req.query.searchText.toLowerCase(); // Get search query from the query params
 
-        // Fetch matching family details from the database using regex for partial matches
+        // Fetch matching family details from the database with specific fields
         const families = await Family.find({
             $or: [
-                { firstname: { $regex: searchText, $options: 'i' } }, // Search in firstname
-                { lastname: { $regex: searchText, $options: 'i' } },  // Search in lastname
-                { currentResident: { $regex: searchText, $options: 'i' } }, // Search in currentResident
-                { nativeResident: { $regex: searchText, $options: 'i' } } // Search in nativeResident
-            ]
-        });
+                { fullname: { $regex: searchText, $options: "i" } },
+                { firstname: { $regex: searchText, $options: "i" } }, // Search in firstname
+                { lastname: { $regex: searchText, $options: "i" } }, // Search in lastname
+                { currentResident: { $regex: searchText, $options: "i" } }, // Search in currentResident
+                { nativeResident: { $regex: searchText, $options: "i" } }, // Search in nativeResident
+            ],
+        }).select("firstname lastname image nativeResident currentResident");
 
-        // Map the families to include the base64-encoded image
-        const familyDetailsWithImages = families.map(family => {
-            return {
-                ...family.toObject(),
-                image: family.image ? family.image.toString('base64') : null
-            };
-        });
 
         // Respond with the fetched data
         res.status(200).json({
             message: "Family details retrieved successfully!",
-            data: familyDetailsWithImages,
+            data: families,
         });
     } catch (error) {
         console.error("Error fetching family details:", error);
