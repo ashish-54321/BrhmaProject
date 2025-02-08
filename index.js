@@ -85,12 +85,50 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
         if (!firstname || !lastname || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
             return res.status(400).json({ error: "All fields are required, including at least one family member." });
         }
-        let result = null; // Declare the result variable outside the block
 
 
-        if (req.file) {
+
+
+
+
+
+        // Parse family members (they arrive as JSON in req.body)
+        const parsedFamilyMembers = JSON.parse(familyMembers);
+
+        // Create a new Family document
+        const newFamily = new Family({
+            fullname: `${firstname} ${lastname}`,
+            firstname,
+            lastname,
+            currentResident,
+            nativeResident,
+            familyMembers: parsedFamilyMembers,
+        });
+
+        // Save the document to the database
+        const savedFamily = await newFamily.save();
+
+        uploadImage(savedFamily._id, req.file) // run this in Back Ground with out Await
+
+        res.status(200).json({
+            message: "Details submitted successfully and stored in the database!",
+        });
+    } catch (error) {
+        console.error("Error submitting details:", error);
+        res.status(500).json({ error: "An error occurred while processing your request." });
+    }
+});
+
+
+// Upload Image in Cloudnary and after That Save Imge Url in DataBase Image
+
+async function uploadImage(id, file) {
+    try {
+        let imageUrl = null;
+
+        if (file) {
             // Upload the image to Cloudinary with automatic format and quality optimization
-            result = await new Promise((resolve, reject) => {
+            const result = await new Promise((resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     {
                         folder: "optimized-images", // Optional folder in Cloudinary
@@ -104,38 +142,25 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
                     }
                 );
 
-                streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+                streamifier.createReadStream(file.buffer).pipe(uploadStream);
             });
 
+            imageUrl = result.secure_url; // Extract the image URL from Cloudinary response
         }
 
-        const imageUrl = req.file ? result.secure_url : null;
 
-        // Parse family members (they arrive as JSON in req.body)
-        const parsedFamilyMembers = JSON.parse(familyMembers);
+        // Save this imageUrl in MongoDB on the specific object ID
+        await Family.findByIdAndUpdate(
+            id, // The ID of the document to update
+            { image: imageUrl }, // The field to update
+            { new: true } // Return the updated document
+        );
 
-        // Create a new Family document
-        const newFamily = new Family({
-            fullname: `${firstname} ${lastname}`,
-            firstname,
-            lastname,
-            currentResident,
-            nativeResident,
-            familyMembers: parsedFamilyMembers,
-            image: imageUrl,
-        });
 
-        // Save the document to the database
-        await newFamily.save();
-
-        res.status(200).json({
-            message: "Details submitted successfully and stored in the database!",
-        });
     } catch (error) {
-        console.error("Error submitting details:", error);
-        res.status(500).json({ error: "An error occurred while processing your request." });
+        console.error("Error while uploading and saving image:", error.message);
     }
-});
+}
 
 
 
@@ -396,9 +421,9 @@ async function updateMember(id, data, memberId) {
 // DELETE API to delete a family document by _id
 app.post("/api/family/delete", async (req, res) => {
     try {
-        const { id, email, password } = req.body;
+        const { id, email, password, imgUrl } = req.body;
 
-        if (!email || !id || !password) {
+        if (!email || !id || !password || !imgUrl) {
             return res.status(400).json({ message: "Bad Request. Check Perameters All Param Required" });
         }
 
@@ -413,12 +438,40 @@ app.post("/api/family/delete", async (req, res) => {
             return res.status(404).json({ message: "Family document not found" });
         }
 
+        if (imgUrl !== 'null') {
+
+            deleteImg(imgUrl)
+        }
+
         res.status(200).json({ message: "Family details deleted successfully" });
     } catch (error) {
         console.error("Error deleting family document:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 });
+
+
+// This function Help to delete Img fron Cloudnary Storage
+
+async function deleteImg(imageUrl) {
+    try {
+        // Extract the public_id including folder structure, excluding the version
+        const public_id = imageUrl.split('/upload/')[1].split('/').slice(1).join('/').split('.')[0];
+        console.log(public_id); // Logs: optimized-images/zfjxdea5bouqtntjo1dp
+
+        // Delete the image using the public_id
+        const result = await cloudinary.uploader.destroy(public_id, { invalidate: true });
+        if (result.result === 'ok') {
+            console.log(`Image deleted successfully.`);
+        } else {
+            console.log(`Failed to delete image. URL: ${imageUrl}, Details: ${JSON.stringify(result)}`);
+        }
+    } catch (error) {
+        console.log(`Server error while performing deleteImg task. Error: ${error.message}`);
+    }
+}
+
+
 
 
 
