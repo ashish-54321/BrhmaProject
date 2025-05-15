@@ -28,8 +28,15 @@ cloudinary.config({
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Enable CORS for all routes
-app.use(cors());
+// CORS options
+const corsOptions = {
+  origin: 'https://jangrasabah.netlify.app',
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  credentials: true // if you need to allow cookies/auth headers
+};
+
+// Use CORS with specified options
+app.use(cors(corsOptions));
 
 // MongoDB connection using environment variable
 mongoose.connect(process.env.MONGODB_URI)
