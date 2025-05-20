@@ -36,7 +36,8 @@ const corsOptions = {
 };
 
 // Use CORS with specified options
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors());
 
 // MongoDB connection using environment variable
 mongoose.connect(process.env.MONGODB_URI)
