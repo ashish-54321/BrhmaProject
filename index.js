@@ -78,7 +78,6 @@ app.get('/', (req, res) => {
 // API endpoint to handle form submission
 app.post("/submit-details", upload.single("image"), async (req, res) => {
     try {
-        // Extract data from the request
         const { firstname, lastname, currentResident, nativeResident, familyMembers, email, password } = req.body;
 
         if (!email || !password) {
@@ -89,21 +88,30 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
         }
 
-        // Validate required fields
         if (!firstname || !lastname || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
             return res.status(400).json({ error: "All fields are required, including at least one family member." });
         }
 
-
-
-
-
-
-
-        // Parse family members (they arrive as JSON in req.body)
         const parsedFamilyMembers = JSON.parse(familyMembers);
 
-        // Create a new Family document
+        // Check if a similar record already exists
+        const existingFamily = await Family.findOne({
+            firstname,
+            lastname,
+            currentResident,
+            nativeResident,
+            familyMembers: {
+                $all: parsedFamilyMembers.map(member => ({
+                    $elemMatch: member
+                }))
+            }
+        });
+
+        if (existingFamily) {
+            return res.status(409).json({ message: "This family record already exists." });
+        }
+
+        // Save new record
         const newFamily = new Family({
             fullname: `${firstname} ${lastname}`,
             firstname,
@@ -113,14 +121,15 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
             familyMembers: parsedFamilyMembers,
         });
 
-        // Save the document to the database
         const savedFamily = await newFamily.save();
 
-        uploadImage(savedFamily._id, req.file) // run this in Back Ground with out Await
+        // Fire-and-forget image upload
+        uploadImage(savedFamily._id, req.file);
 
         res.status(200).json({
             message: "Details submitted successfully and stored in the database!",
         });
+
     } catch (error) {
         console.error("Error submitting details:", error);
         res.status(500).json({ error: "An error occurred while processing your request." });
