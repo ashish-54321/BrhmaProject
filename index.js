@@ -28,8 +28,48 @@ cloudinary.config({
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Enable CORS for all routes
-app.use(cors());
+
+const allowedOrigin = 'https://jangrasabah.netlify.app';
+// const allowedOrigin = 'http://localhost:3000';
+
+
+// CORS Configuration
+app.use(
+    cors({
+        origin: allowedOrigin,
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+    })
+);
+
+
+
+// Block Direct Browser Access & Non-Browser Requests
+app.use((req, res, next) => {
+    const origin = req.headers.origin || '';
+    const userAgent = req.get('User-Agent') || '';
+
+    // 1. Block direct browser access
+    if (!origin) {
+        return res.status(403).json({ message: 'Direct access is not allowed Access Denied Fuck You create your Own u Looser' });
+    }
+
+    // 2. Only allow requests from the specific frontend
+    if (origin !== allowedOrigin) {
+        return res.status(403).json({ message: 'Access Denied Fuck You create your Own u Looser' });
+    }
+
+    // 3. Block requests from backend servers
+    const blockedAgents = ['Postman', 'node-fetch', 'axios', 'cURL', 'http'];
+    if (blockedAgents.some((agent) => userAgent.includes(agent))) {
+        return res.status(403).json({ message: 'Access Denied Fuck You create your Own u Looser' });
+    }
+
+    next();
+});
+
+
 
 // MongoDB connection using environment variable
 mongoose.connect(process.env.MONGODB_URI)
