@@ -553,7 +553,7 @@ app.post("/api/news/delete", async (req, res) => {
     try {
         const { id, email, password, imgUrl } = req.body;
 
-        if (!email || !id || !password || !imgUrl) {
+        if (!email || !id || !password) {
             return res.status(400).json({ message: "Bad Request. Check Perameters All Param Required" });
         }
 
