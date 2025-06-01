@@ -28,15 +28,7 @@ cloudinary.config({
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// CORS options
-const corsOptions = {
-  origin: 'https://jangrasabah.netlify.app',
-  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
-  credentials: true // if you need to allow cookies/auth headers
-};
-
-// Use CORS with specified options
-// app.use(cors(corsOptions));
+// Enable CORS for all routes
 app.use(cors());
 
 // MongoDB connection using environment variable
@@ -62,10 +54,19 @@ const FamilySchema = new mongoose.Schema({
     currentResident: { type: String, required: true },
     nativeResident: { type: String, required: true },
     familyMembers: { type: [FamilyMemberSchema], required: true },
-    image: { type: String }, // To store the image in binary format
+    image: { type: String },
 });
 
 const Family = mongoose.model("Family", FamilySchema);
+
+const NewsSchema = new mongoose.Schema({
+    title: String,
+    description: String,
+    datetime: String,
+    imageUrl: String,
+});
+
+const News = mongoose.model("News", NewsSchema);
 
 
 // Root endpoint
@@ -74,8 +75,58 @@ app.get('/', (req, res) => {
 });
 
 
+// News/Blog Post
+app.post('/api/news', upload.single('image'), async (req, res) => {
+    try {
+        const { title, description, datetime, email, password } = req.body;
+        // Check Points 
+        if (!email || !password) {
+            return res.status(404).json({ message: "Please Provide username and Password" });
+        }
 
-// API endpoint to handle form submission
+        if (setEmail !== email || setPassword !== password) {
+            return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
+        }
+
+        if (!title || !description || !datetime) {
+            return res.status(400).json({ error: "All fields are required Not Posted" });
+        }
+
+        const news = new News({ title, description, datetime });
+        const savedNews = await news.save();
+
+        if (req.file) {
+            const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+            const maxFileSize = 500 * 1024; // 500KB in bytes
+            const mimeType = req.file.mimetype;
+            const fileSize = req.file.size;
+
+            if (allowedMimeTypes.includes(mimeType) && fileSize <= maxFileSize) {
+                // Valid image and size within limit
+                uploadImage(savedNews._id, req.file, "jangra-blog");
+            } else {
+                console.warn("Skipped upload due to invalid type or size:", {
+                    type: mimeType,
+                    size: `${(fileSize / 1024).toFixed(2)} KB`
+                });
+            }
+        }
+
+
+        res.status(200).json({ message: "News saved" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+app.get('/api/news', async (req, res) => {
+    const allNews = await News.find({});
+    res.status(200).json(allNews);
+});
+
+
+
 app.post("/submit-details", upload.single("image"), async (req, res) => {
     try {
         const { firstname, lastname, currentResident, nativeResident, familyMembers, email, password } = req.body;
@@ -123,22 +174,23 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
 
         const savedFamily = await newFamily.save();
 
-       if (req.file) {
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-    const maxFileSize = 500 * 1024; // 500KB in bytes
-    const mimeType = req.file.mimetype;
-    const fileSize = req.file.size;
+        if (req.file) {
+            const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+            const maxFileSize = 500 * 1024; // 500KB in bytes
+            const mimeType = req.file.mimetype;
+            const fileSize = req.file.size;
 
-    if (allowedMimeTypes.includes(mimeType) && fileSize <= maxFileSize) {
-        // Valid image and size within limit
-        uploadImage(savedFamily._id, req.file);
-    } else {
-        console.warn("Skipped upload due to invalid type or size:", {
-            type: mimeType,
-            size: `${(fileSize / 1024).toFixed(2)} KB`
-        });
-    }
-}
+            if (allowedMimeTypes.includes(mimeType) && fileSize <= maxFileSize) {
+                // Valid image and size within limit
+                uploadImage(savedFamily._id, req.file, "optimized-images");
+            } else {
+                console.warn("Skipped upload due to invalid type or size:", {
+                    type: mimeType,
+                    size: `${(fileSize / 1024).toFixed(2)} KB`
+                });
+            }
+        }
+
 
 
         res.status(200).json({
@@ -152,9 +204,10 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
 });
 
 
+
 // Upload Image in Cloudnary and after That Save Imge Url in DataBase Image
 
-async function uploadImage(id, file) {
+async function uploadImage(id, file, path) {
     try {
         let imageUrl = null;
 
@@ -163,7 +216,7 @@ async function uploadImage(id, file) {
             const result = await new Promise((resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     {
-                        folder: "optimized-images", // Optional folder in Cloudinary
+                        folder: path, // Optional folder in Cloudinary
                         transformation: [
                             { format: "auto", quality: "auto" }, // Apply auto format and quality optimization
                         ],
@@ -180,13 +233,28 @@ async function uploadImage(id, file) {
             imageUrl = result.secure_url; // Extract the image URL from Cloudinary response
         }
 
+        if (path === 'optimized-images') {
 
-        // Save this imageUrl in MongoDB on the specific object ID
-        await Family.findByIdAndUpdate(
-            id, // The ID of the document to update
-            { image: imageUrl }, // The field to update
-            { new: true } // Return the updated document
-        );
+            // Save this imageUrl in MongoDB on the specific object ID
+            await Family.findByIdAndUpdate(
+                id, // The ID of the document to update
+                { image: imageUrl }, // The field to update
+                { new: true } // Return the updated document
+            );
+
+        } else {
+
+            // Save this imageUrl in MongoDB on the specific object ID
+            await News.findByIdAndUpdate(
+                id, // The ID of the document to update
+                { imageUrl: imageUrl }, // The field to update
+                { new: true } // Return the updated document
+            );
+
+
+        }
+
+
 
 
     } catch (error) {
@@ -394,8 +462,6 @@ async function updateNewMember(id, data) {
 }
 
 
-
-
 async function updateHead(id, data) {
     try {
 
@@ -483,6 +549,38 @@ app.post("/api/family/delete", async (req, res) => {
 });
 
 
+app.post("/api/news/delete", async (req, res) => {
+    try {
+        const { id, email, password, imgUrl } = req.body;
+
+        if (!email || !id || !password || !imgUrl) {
+            return res.status(400).json({ message: "Bad Request. Check Perameters All Param Required" });
+        }
+
+        if (setEmail !== email || setPassword !== password) {
+            return res.status(400).json({ message: "Invalid credentials. Please contact to the admin." });
+        }
+
+        // Find and delete the family document by _id
+        const deletedNews = await News.findByIdAndDelete(id);
+
+        if (!deletedNews) {
+            return res.status(404).json({ message: "News document not found" });
+        }
+
+        if (imgUrl !== 'null') {
+
+            deleteImg(imgUrl)
+        }
+
+        res.status(200).json({ message: "Family details deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting family document:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
 // This function Help to delete Img fron Cloudnary Storage
 
 async function deleteImg(imageUrl) {
@@ -502,9 +600,6 @@ async function deleteImg(imageUrl) {
         console.log(`Server error while performing deleteImg task. Error: ${error.message}`);
     }
 }
-
-
-
 
 
 // Start the server
