@@ -123,8 +123,23 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
 
         const savedFamily = await newFamily.save();
 
-        // Fire-and-forget image upload
+       if (req.file) {
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    const maxFileSize = 500 * 1024; // 500KB in bytes
+    const mimeType = req.file.mimetype;
+    const fileSize = req.file.size;
+
+    if (allowedMimeTypes.includes(mimeType) && fileSize <= maxFileSize) {
+        // Valid image and size within limit
         uploadImage(savedFamily._id, req.file);
+    } else {
+        console.warn("Skipped upload due to invalid type or size:", {
+            type: mimeType,
+            size: `${(fileSize / 1024).toFixed(2)} KB`
+        });
+    }
+}
+
 
         res.status(200).json({
             message: "Details submitted successfully and stored in the database!",
