@@ -30,7 +30,7 @@ app.use(express.json());
 
 
 // const allowedOrigin = 'https://jangrasabah.netlify.app';
-const allowedOrigin = 'http://127.0.0.1:5500';
+const allowedOrigin = 'http://localhost:3000';
 
 
 // CORS Configuration
@@ -91,6 +91,7 @@ const FamilySchema = new mongoose.Schema({
     fullname: { type: String, required: true },
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
+    phone: { type: String, required: true },
     currentResident: { type: String, required: true },
     nativeResident: { type: String, required: true },
     familyMembers: { type: [FamilyMemberSchema], required: true },
@@ -169,7 +170,7 @@ app.get('/api/news', async (req, res) => {
 
 app.post("/submit-details", upload.single("image"), async (req, res) => {
     try {
-        const { firstname, lastname, currentResident, nativeResident, familyMembers, email, password } = req.body;
+        const { firstname, lastname, phone, currentResident, nativeResident, familyMembers, email, password } = req.body;
 
         if (!email || !password) {
             return res.status(404).json({ message: "Please Provide username and Password" });
@@ -179,7 +180,7 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
         }
 
-        if (!firstname || !lastname || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
+        if (!firstname || !lastname || !phone || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
             return res.status(400).json({ error: "All fields are required, including at least one family member." });
         }
 
@@ -189,6 +190,7 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
         const existingFamily = await Family.findOne({
             firstname,
             lastname,
+            phone,
             currentResident,
             nativeResident,
             familyMembers: {
