@@ -29,8 +29,8 @@ cloudinary.config({
 app.use(express.json());
 
 
-const allowedOrigin = 'https://jangrasabah.netlify.app';
-// const allowedOrigin = 'http://localhost:3000';
+// const allowedOrigin = 'https://jangrasabah.netlify.app';
+const allowedOrigin = 'http://127.0.0.1:5500';
 
 
 // CORS Configuration
