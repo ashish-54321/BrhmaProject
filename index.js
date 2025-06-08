@@ -362,6 +362,7 @@ app.get('/search-family-details', async (req, res) => {
                 { fullname: { $regex: searchText, $options: "i" } },
                 { firstname: { $regex: searchText, $options: "i" } }, // Search in firstname
                 { lastname: { $regex: searchText, $options: "i" } }, // Search in lastname
+                { phone: { $regex: searchText, $options: "i" } }, // Search in phone
                 { currentResident: { $regex: searchText, $options: "i" } }, // Search in currentResident
                 { nativeResident: { $regex: searchText, $options: "i" } }, // Search in nativeResident
             ],
