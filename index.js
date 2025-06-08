@@ -30,7 +30,7 @@ app.use(express.json());
 
 
 // const allowedOrigin = 'https://jangrasabah.netlify.app';
-const allowedOrigin = 'http://127.0.0.1:5500';
+const allowedOrigin = 'http://localhost:3000';
 
 
 // CORS Configuration
@@ -209,6 +209,7 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
             fullname: `${firstname} ${lastname}`,
             firstname,
             lastname,
+            phone,
             currentResident,
             nativeResident,
             familyMembers: parsedFamilyMembers,
