@@ -428,7 +428,7 @@ app.post('/login', async (req, res) => {
 
 // Update API
 app.post("/update-family-member", async (req, res) => {
-    const { firstname, lastname, current, native, member, relation, age, qualification, gotra, occupation, ticket, memberId, familyId, email, password } = req.body;
+    const { firstname, lastname, phone, current, native, member, relation, age, qualification, gotra, occupation, ticket, memberId, familyId, email, password } = req.body;
     if (!email || !password) {
         return res.status(404).json({ message: "Please Provide username and Password" });
     }
@@ -439,7 +439,7 @@ app.post("/update-family-member", async (req, res) => {
 
     if (ticket === "head") {
 
-        if (!firstname || !lastname || !current || !native || !familyId) {
+        if (!firstname || !lastname || !phone || !current || !native || !familyId) {
             return res.status(400).json({ message: "All fields are required!" });
         }
         const message = await updateHead(familyId, req.body);
@@ -515,6 +515,7 @@ async function updateHead(id, data) {
                 $set: {
                     firstname: data.firstname,
                     lastname: data.lastname,
+                    phone: data.phone,
                     currentResident: data.current,
                     nativeResident: data.native,
                 }
