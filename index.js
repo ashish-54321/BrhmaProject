@@ -581,9 +581,12 @@ app.post("/api/family/delete", async (req, res) => {
             return res.status(404).json({ message: "Family document not found" });
         }
 
-        if (imgUrl !== 'null') {
-
-            deleteImg(imgUrl)
+        if (
+            imgUrl &&
+            imgUrl !== 'null' &&
+            imgUrl.trim() !== ''
+        ) {
+            deleteImg(imgUrl);
         }
 
         res.status(200).json({ message: "Family details deleted successfully" });
