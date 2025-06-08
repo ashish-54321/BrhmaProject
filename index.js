@@ -90,7 +90,7 @@ const FamilyMemberSchema = new mongoose.Schema({
 const FamilySchema = new mongoose.Schema({
     fullname: { type: String, required: true },
     firstname: { type: String, required: true },
-    lastname: { type: String, required: true },
+    lastname: { type: String },
     phone: { type: String, required: true },
     currentResident: { type: String, required: true },
     nativeResident: { type: String, required: true },
@@ -180,7 +180,7 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
         }
 
-        if (!firstname || !lastname || !phone || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
+        if (!firstname || !phone || !currentResident || !nativeResident || !familyMembers || familyMembers.length < 1) {
             return res.status(400).json({ error: "All fields are required, including at least one family member." });
         }
 
@@ -439,7 +439,7 @@ app.post("/update-family-member", async (req, res) => {
 
     if (ticket === "head") {
 
-        if (!firstname || !lastname || !phone || !current || !native || !familyId) {
+        if (!firstname || !phone || !current || !native || !familyId) {
             return res.status(400).json({ message: "All fields are required!" });
         }
         const message = await updateHead(familyId, req.body);
