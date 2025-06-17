@@ -104,7 +104,7 @@ const NewsSchema = new mongoose.Schema({
     title: String,
     description: String,
     datetime: String,
-    imageUrl: String,
+    imageUrls: [String]
 });
 
 const News = mongoose.model("News", NewsSchema);
@@ -117,10 +117,10 @@ app.get('/', (req, res) => {
 
 
 // News/Blog Post
-app.post('/api/news', upload.single('image'), async (req, res) => {
+app.post('/api/news', upload.array('images', 5), async (req, res) => {
     try {
         const { title, description, datetime, email, password } = req.body;
-        // Check Points 
+
         if (!email || !password) {
             return res.status(404).json({ message: "Please Provide username and Password" });
         }
@@ -130,35 +130,43 @@ app.post('/api/news', upload.single('image'), async (req, res) => {
         }
 
         if (!title || !description || !datetime) {
-            return res.status(400).json({ error: "All fields are required Not Posted" });
+            return res.status(400).json({ error: "All fields are required. Not Posted" });
         }
 
+        // Step 1: Save news entry first
         const news = new News({ title, description, datetime });
         const savedNews = await news.save();
 
-        if (req.file) {
+        // Step 2: Upload each image one by one if any
+        if (req.files && req.files.length > 0) {
             const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-            const maxFileSize = 500 * 1024; // 500KB in bytes
-            const mimeType = req.file.mimetype;
-            const fileSize = req.file.size;
+            const maxFileSize = 500 * 1024; // 500 KB
 
-            if (allowedMimeTypes.includes(mimeType) && fileSize <= maxFileSize) {
-                // Valid image and size within limit
-                uploadImage(savedNews._id, req.file, "jangra-blog");
-            } else {
-                console.warn("Skipped upload due to invalid type or size:", {
-                    type: mimeType,
-                    size: `${(fileSize / 1024).toFixed(2)} KB`
-                });
+            for (const file of req.files) {
+                const { mimetype, size, originalname } = file;
+
+                if (allowedMimeTypes.includes(mimetype) && size <= maxFileSize) {
+                    // ✅ Call one by one
+                    await uploadImage(savedNews._id, file, "jangra-blog");
+                    console.log("Uploaded:", originalname);
+                } else {
+                    console.warn("❌ Skipped:", {
+                        file: originalname,
+                        reason: "Invalid type or size",
+                        type: mimetype,
+                        size: `${(size / 1024).toFixed(2)} KB`
+                    });
+                }
             }
         }
 
-
-        res.status(200).json({ message: "News saved" });
+        res.status(200).json({ message: "News saved and images processed." });
     } catch (err) {
+        console.error("❌ Error saving news:", err);
         res.status(500).json({ error: err.message });
     }
 });
+
 
 
 app.get('/api/news', async (req, res) => {
@@ -166,7 +174,40 @@ app.get('/api/news', async (req, res) => {
     res.status(200).json(allNews);
 });
 
+app.get('/api/news/:id', async (req, res) => {
+    const news = await News.findById(req.params.id);
+    if (!news) return res.status(404).send({ error: "Not found" });
+    res.send(news);
+});
 
+// Detect language using Google Translate
+async function detectLanguage(text) {
+    const res = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=hi&dt=ld&q=${encodeURIComponent(text)}`
+    );
+    if (!res.ok) throw new Error("Language detection failed");
+    const data = await res.json();
+    return data[2]; // Detected language code (e.g., "en", "hi")
+}
+
+// Translate only if text is not already in Hindi
+async function translateIfNeeded(text) {
+    if (!text || typeof text !== "string") return text;
+
+    const detectedLang = await detectLanguage(text);
+    if (detectedLang === "hi") return text;
+
+    const res = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`
+    );
+    if (!res.ok) {
+        console.error(`Translation failed for "${text}"`);
+        return text;
+    }
+
+    const data = await res.json();
+    return data[0][0][0]; // Translated text
+}
 
 app.post("/submit-details", upload.single("image"), async (req, res) => {
     try {
@@ -186,6 +227,24 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
 
         const parsedFamilyMembers = JSON.parse(familyMembers);
 
+        // Translate personal info
+        const translatedFirstname = await translateIfNeeded(firstname);
+        const translatedLastname = await translateIfNeeded(lastname);
+        const translatedCurrentResident = await translateIfNeeded(currentResident);
+        const translatedNativeResident = await translateIfNeeded(nativeResident);
+
+        // Translate family members
+        const translatedFamilyMembers = await Promise.all(
+            parsedFamilyMembers.map(async (member) => ({
+                name: await translateIfNeeded(member.name),
+                relation: await translateIfNeeded(member.relation),
+                gotra: await translateIfNeeded(member.gotra),
+                qualification: await translateIfNeeded(member.qualification),
+                occupation: await translateIfNeeded(member.occupation),
+                age: member.age,
+            }))
+        );
+
         // Check if a similar record already exists
         const existingFamily = await Family.findOne({
             firstname,
@@ -204,15 +263,16 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
             return res.status(409).json({ message: "This family record already exists." });
         }
 
-        // Save new record
+
+        // Save to DB
         const newFamily = new Family({
-            fullname: `${firstname} ${lastname}`,
-            firstname,
-            lastname,
+            fullname: `${translatedFirstname} ${translatedLastname}`,
+            firstname: translatedFirstname,
+            lastname: translatedLastname,
             phone,
-            currentResident,
-            nativeResident,
-            familyMembers: parsedFamilyMembers,
+            currentResident: translatedCurrentResident,
+            nativeResident: translatedNativeResident,
+            familyMembers: translatedFamilyMembers,
         });
 
         const savedFamily = await newFamily.save();
@@ -244,6 +304,46 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
         console.error("Error submitting details:", error);
         res.status(500).json({ error: "An error occurred while processing your request." });
     }
+});
+
+app.post("/update-img", upload.single("image"), async (req, res) => {
+    try {
+        const { email, password, id } = req.body;
+
+        if (!email || !password || !id) {
+            return res.status(404).json({ message: "Please Provide username and Password" });
+        }
+
+        if (setEmail !== email || setPassword !== password) {
+            return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
+        }
+
+
+        if (req.file) {
+            const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+            const maxFileSize = 500 * 1024; // 500KB in bytes
+            const mimeType = req.file.mimetype;
+            const fileSize = req.file.size;
+
+            if (allowedMimeTypes.includes(mimeType) && fileSize <= maxFileSize) {
+                // Valid image and size within limit
+                uploadImage(id, req.file, "optimized-images");
+            } else {
+                console.warn("Skipped upload due to invalid type or size:", {
+                    type: mimeType,
+                    size: `${(fileSize / 1024).toFixed(2)} KB`
+                });
+            }
+        }
+        res.status(200).json({
+            message: "Image Updated successfully and stored in the database!",
+        });
+
+    } catch (error) {
+        console.error("Error Updating Img details:", error);
+        res.status(500).json({ error: "An error occurred while processing your request." });
+    }
+
 });
 
 
@@ -289,9 +389,9 @@ async function uploadImage(id, file, path) {
 
             // Save this imageUrl in MongoDB on the specific object ID
             await News.findByIdAndUpdate(
-                id, // The ID of the document to update
-                { imageUrl: imageUrl }, // The field to update
-                { new: true } // Return the updated document
+                id,
+                { $push: { imageUrls: imageUrl } }, // ✅ Push new URL to the array
+                { new: true }
             );
 
 
@@ -354,7 +454,8 @@ app.get('/get-family-details/:id', async (req, res) => {
 
 app.get('/search-family-details', async (req, res) => {
     try {
-        const searchText = req.query.searchText.toLowerCase(); // Get search query from the query params
+        // Get search query from the query params
+        const searchText = await translateIfNeeded(req.query.searchText.toLowerCase())
 
         // Fetch matching family details from the database with specific fields
         const families = await Family.find({
@@ -616,9 +717,13 @@ app.post("/api/news/delete", async (req, res) => {
             return res.status(404).json({ message: "News document not found" });
         }
 
-        if (imgUrl !== 'null') {
-
-            deleteImg(imgUrl)
+        // If there are image URLs, delete each one
+        if (Array.isArray(deletedNews.imageUrls) && deletedNews.imageUrls.length > 0) {
+            for (const imgUrl of deletedNews.imageUrls) {
+                if (imgUrl && imgUrl !== 'null') {
+                    deleteImg(imgUrl); // Call your function here for each image
+                }
+            }
         }
 
         res.status(200).json({ message: "Family details deleted successfully" });
@@ -633,6 +738,7 @@ app.post("/api/news/delete", async (req, res) => {
 
 async function deleteImg(imageUrl) {
     try {
+        console.log("Under Image Dleating Process");
         // Extract the public_id including folder structure, excluding the version
         const public_id = imageUrl.split('/upload/')[1].split('/').slice(1).join('/').split('.')[0];
         console.log(public_id); // Logs: optimized-images/zfjxdea5bouqtntjo1dp
