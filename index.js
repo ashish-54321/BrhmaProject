@@ -29,7 +29,7 @@ cloudinary.config({
 app.use(express.json());
 
 
-const allowedOrigin = 'https://jangrasabah.netlify.app';
+const allowedOrigin = 'https://jangrasabha.com';
 // const allowedOrigin = 'http://127.0.0.1:5500';
 
 
