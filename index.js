@@ -583,12 +583,12 @@ async function updateNewMember(id, data) {
 
         // Create the new family member object
         const newFamilyMember = {
-            name: data.member,
-            relation: data.relation,
-            gotra: data.gotra,
-            qualification: data.qualification,
-            age: data.age,
-            occupation: data.occupation,
+            name: await translateIfNeeded(data.member),
+            relation: await translateIfNeeded(data.relation),
+            gotra: await translateIfNeeded(data.gotra),
+            qualification: await translateIfNeeded(data.qualification),
+            age: await translateIfNeeded(data.age),
+            occupation: await translateIfNeeded(data.occupation),
         };
 
         // Add the new member to the familyMembers array
@@ -615,11 +615,11 @@ async function updateHead(id, data) {
             id,
             {
                 $set: {
-                    firstname: data.firstname,
-                    lastname: data.lastname,
+                    firstname: await translateIfNeeded(data.firstname),
+                    lastname: await translateIfNeeded(data.lastname),
                     phone: data.phone,
-                    currentResident: data.current,
-                    nativeResident: data.native,
+                    currentResident: await translateIfNeeded(data.current),
+                    nativeResident: await translateIfNeeded(data.native),
                 }
             },
             { new: true } // Return the updated document
@@ -640,12 +640,12 @@ async function updateMember(id, data, memberId) {
             { _id: id, "familyMembers._id": memberId },
             {
                 $set: {
-                    "familyMembers.$.occupation": data.occupation,
-                    "familyMembers.$.name": data.member,
-                    "familyMembers.$.gotra": data.gotra,
-                    "familyMembers.$.relation": data.relation,
-                    "familyMembers.$.qualification": data.qualification,
-                    "familyMembers.$.age": data.age,
+                    "familyMembers.$.occupation": await translateIfNeeded(data.occupation),
+                    "familyMembers.$.name": await translateIfNeeded(data.member),
+                    "familyMembers.$.gotra": await translateIfNeeded(data.gotra),
+                    "familyMembers.$.relation": await translateIfNeeded(data.relation),
+                    "familyMembers.$.qualification": await translateIfNeeded(data.qualification),
+                    "familyMembers.$.age": await translateIfNeeded(data.age),
                 },
             },
             { new: true } // Return the updated document
