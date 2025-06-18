@@ -683,11 +683,11 @@ app.post("/api/family/delete", async (req, res) => {
         }
 
         if (
-            imgUrl &&
-            imgUrl !== 'null' &&
-            imgUrl.trim() !== ''
+            deletedFamily.image &&
+            deletedFamily.image !== 'null' &&
+            deletedFamily.image.trim() !== ''
         ) {
-            deleteImg(imgUrl);
+            deleteImg(deletedFamily.image);
         }
 
         res.status(200).json({ message: "Family details deleted successfully" });
