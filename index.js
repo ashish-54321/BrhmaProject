@@ -30,7 +30,7 @@ app.use(express.json());
 
 
 const allowedOrigin = 'https://jangrasabha.com';
-// const allowedOrigin = 'http://127.0.0.1:5500';
+// const allowedOrigin = 'http://localhost:5173';
 
 
 // CORS Configuration
@@ -117,7 +117,7 @@ app.get('/', (req, res) => {
 
 
 // News/Blog Post
-app.post('/api/news', upload.array('images', 5), async (req, res) => {
+app.post('/api/news', upload.array('images', 10), async (req, res) => {
     try {
         const { title, description, datetime, email, password } = req.body;
 
@@ -410,21 +410,33 @@ async function uploadImage(id, file, path) {
 // API endpoint to fetch all family details with base64 image
 app.get('/get-family-details', async (req, res) => {
     try {
-        // Fetch only specific fields from all documents in the Family collection
-        const families = await Family.find().select(
-            "firstname lastname image nativeResident currentResident"
-        );
+        // page aur limit query param le lo
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6;
+        const skip = (page - 1) * limit;
 
-        // Respond with the fetched data
+        // total count nikal lo
+        const total = await Family.countDocuments();
+
+        // paginated result
+        const families = await Family.find()
+            .select("firstname lastname image nativeResident currentResident")
+            .skip(skip)
+            .limit(limit);
+
         res.status(200).json({
             message: "Family details retrieved successfully!",
             data: families,
+            total: total,   // yeh important hai, frontend ko total pages calculate karne ke liye
         });
     } catch (error) {
         console.error("Error fetching family details:", error);
-        res.status(500).json({ error: "An error occurred while fetching family details." });
+        res.status(500).json({
+            error: "An error occurred while fetching family details.",
+        });
     }
 });
+
 
 
 // API endpoint to fetch family details by _id
@@ -665,9 +677,9 @@ async function updateMember(id, data, memberId) {
 // DELETE API to delete a family document by _id
 app.post("/api/family/delete", async (req, res) => {
     try {
-        const { id, email, password, imgUrl } = req.body;
+        const { id, email, password } = req.body;
 
-        if (!email || !id || !password || !imgUrl) {
+        if (!email || !id || !password) {
             return res.status(400).json({ message: "Bad Request. Check Perameters All Param Required" });
         }
 
