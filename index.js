@@ -192,33 +192,27 @@ app.get('/api/news/:id', async (req, res) => {
     res.send(news);
 });
 
-// Detect language using Google Translate
-async function detectLanguage(text) {
-    const res = await fetch(
-        https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=hi&dt=ld&q=${encodeURIComponent(text)}
-    );
-    if (!res.ok) throw new Error("Language detection failed");
-    const data = await res.json();
-    return data[2]; // Detected language code (e.g., "en", "hi")
+// Custom Hindi detector
+function isHindiText(text) {
+  if (!text || typeof text !== "string") return false;
+  return /[\u0900-\u097F]/.test(text);
 }
 
-// Translate only if text is not already in Hindi
+// Translate if needed
 async function translateIfNeeded(text) {
-    if (!text || typeof text !== "string") return text;
+  if (!text || typeof text !== "string") return text;
 
-    const detectedLang = await detectLanguage(text);
-    if (detectedLang === "hi") return text;
+  if (isHindiText(text)) return text;  // skip if hindi
 
-    const res = await fetch(
-        https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}
-    );
-    if (!res.ok) {
-        console.error(Translation failed for "${text}");
-        return text;
-    }
-
-    const data = await res.json();
-    return data[0][0][0]; // Translated text
+  const res = await fetch(
+    `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`
+  );
+  if (!res.ok) {
+    console.error(`Translation failed for "${text}"`);
+    return text;
+  }
+  const data = await res.json();
+  return data[0][0][0]; // translated
 }
 
 app.post("/submit-details", upload.single("image"), async (req, res) => {
