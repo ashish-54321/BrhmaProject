@@ -194,26 +194,28 @@ app.get('/api/news/:id', async (req, res) => {
 
 // Custom Hindi detector
 function isHindiText(text) {
-  if (!text || typeof text !== "string") return false;
-  return /[\u0900-\u097F]/.test(text);
+    if (!text || typeof text !== "string") return false;
+    return /[\u0900-\u097F]/.test(text);
 }
 
 // Translate if needed
 async function translateIfNeeded(text) {
-  if (!text || typeof text !== "string") return text;
+    if (!text || typeof text !== "string") return text;
 
-  if (isHindiText(text)) return text;  // skip if hindi
+    if (isHindiText(text)) return text;  // skip if hindi
 
-  const res = await fetch(
-    `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`
-  );
-  if (!res.ok) {
-    console.error(`Translation failed for "${text}"`);
-    return text;
-  }
-  const data = await res.json();
-  return data[0][0][0]; // translated
+    const res = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`
+    );
+    if (!res.ok) {
+        console.error(`Translation failed for "${text}"`);
+        return text;
+    }
+    const data = await res.json();
+    return data[0][0][0]; // translated
 }
+
+
 
 app.post("/submit-details", upload.single("image"), async (req, res) => {
     try {
@@ -272,7 +274,7 @@ app.post("/submit-details", upload.single("image"), async (req, res) => {
 
         // Save to DB
         const newFamily = new Family({
-            fullname: `${translatedFirstname} ${translatedLastname}`,
+            fullname: `${firstname} ${lastname}`,
             firstname: translatedFirstname,
             lastname: translatedLastname,
             phone,
@@ -473,7 +475,7 @@ app.get('/get-family-details/:id', async (req, res) => {
 app.get('/search-family-details', async (req, res) => {
     try {
         // Get search query from the query params
-        const searchText = await translateIfNeeded(req.query.searchText.toLowerCase())
+        const searchText = req.query.searchText.toLowerCase()
 
         // Fetch matching family details from the database with specific fields
         const families = await Family.find({
@@ -485,7 +487,7 @@ app.get('/search-family-details', async (req, res) => {
                 { currentResident: { $regex: searchText, $options: "i" } }, // Search in currentResident
                 { nativeResident: { $regex: searchText, $options: "i" } }, // Search in nativeResident
             ],
-        }).select("firstname lastname image nativeResident currentResident");
+        }).select("firstname lastname phone fullname image nativeResident currentResident");
 
 
         // Respond with the fetched data
