@@ -195,7 +195,7 @@ app.get('/api/news/:id', async (req, res) => {
 // Detect language using Google Translate
 async function detectLanguage(text) {
     const res = await fetch(
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=hi&dt=ld&q=${encodeURIComponent(text)}`
+        https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=hi&dt=ld&q=${encodeURIComponent(text)}
     );
     if (!res.ok) throw new Error("Language detection failed");
     const data = await res.json();
@@ -210,15 +210,15 @@ async function translateIfNeeded(text) {
     if (detectedLang === "hi") return text;
 
     const res = await fetch(
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`
+        https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}
     );
     if (!res.ok) {
-        console.error(`Translationfailed for ${text}`);
+        console.error(Translation failed for "${text}");
         return text;
     }
 
     const data = await res.json();
-    return data[0][0][0]; // Translated text
+    return data[0][0][0]; // Translated text
 }
 
 app.post("/submit-details", upload.single("image"), async (req, res) => {
