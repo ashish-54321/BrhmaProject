@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require("multer");
 const mongoose = require('mongoose');
 const cors = require('cors');
-const rateLimit = require('express-rate-limit');
+// const rateLimit = require('express-rate-limit');
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 const { translate } = require('google-translate-api-x');
@@ -46,15 +46,15 @@ app.use(
 );
 
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000,
-    message: {
-        status: 429,
-        error: 'Too many requests. Please try again later.'
-    }
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     max: 1000,
+//     message: {
+//         status: 429,
+//         error: 'Too many requests. Please try again later.'
+//     }
+// });
+// app.use(limiter);
 
 
 
