@@ -2,10 +2,9 @@ const express = require('express');
 const multer = require("multer");
 const mongoose = require('mongoose');
 const cors = require('cors');
-// const rateLimit = require('express-rate-limit');
+const rateLimit = require('express-rate-limit');
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
-const { translate } = require('google-translate-api-x');
 require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
@@ -46,15 +45,15 @@ app.use(
 );
 
 
-// const limiter = rateLimit({
-//     windowMs: 15 * 60 * 1000, // 15 minutes
-//     max: 1000,
-//     message: {
-//         status: 429,
-//         error: 'Too many requests. Please try again later.'
-//     }
-// });
-// app.use(limiter);
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000,
+    message: {
+        status: 429,
+        error: 'Too many requests. Please try again later.'
+    }
+});
+app.use(limiter);
 
 
 
@@ -193,27 +192,33 @@ app.get('/api/news/:id', async (req, res) => {
     res.send(news);
 });
 
-// Translating google API 
+// Detect language using Google Translate
+async function detectLanguage(text) {
+    const res = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=hi&dt=ld&q=${encodeURIComponent(text)}`
+    );
+    if (!res.ok) throw new Error("Language detection failed");
+    const data = await res.json();
+    return data[2]; // Detected language code (e.g., "en", "hi")
+}
+
+// Translate only if text is not already in Hindi
 async function translateIfNeeded(text) {
     if (!text || typeof text !== "string") return text;
 
-    try {
-        // pehle language detect karo
-        const detection = await translate(text, { to: 'en' });  // just to get detection
-        const detectedLang = detection.from.language.iso;
+    const detectedLang = await detectLanguage(text);
+    if (detectedLang === "hi") return text;
 
-        if (detectedLang === 'hi') {
-            // agar already hindi hai
-            return text;
-        } else {
-            // hindi mai translate karo
-            const translated = await translate(text, { to: 'hi' });
-            return translated.text;
-        }
-    } catch (err) {
-        console.error('Translation error:', err);
+    const res = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`
+    );
+    if (!res.ok) {
+        console.error(`Translationfailed for ${text}`);
         return text;
     }
+
+    const data = await res.json();
+    return data[0][0][0]; // Translated text
 }
 
 app.post("/submit-details", upload.single("image"), async (req, res) => {
