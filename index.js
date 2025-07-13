@@ -123,61 +123,92 @@ const News = mongoose.model("News", NewsSchema);
 
 
 // Root endpoint
-app.get('/', (req, res) => {
-    res.status(200).send('Ashish Api Live');
+// Root endpoint – total Family documents kitne hain
+app.get('/', async (req, res) => {
+    try {
+        // ❱❱ Total documents count
+        const totalFamilies = await Family.countDocuments({});    // exact count
+        //  ▸ Agar approximate count chale to: await Family.estimatedDocumentCount();
+
+        res.status(200).json({ totalFamilies });  // { totalFamilies: 42 } jaisi response
+    } catch (err) {
+        console.error('Error counting Family docs:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
 });
+
+
+
 
 
 // News/Blog Post
-app.post('/api/news', upload.array('images', 10), async (req, res) => {
-    try {
-        const { title, description, datetime, email, password } = req.body;
+// 👇 Multer: images + videos alag‑alag fields accept karo
+// 10 images tak + 3 videos tak (numbers ko apni requirement ke hisaab se change kar sakte ho)
+app.post(
+    "/api/news",
+    upload.fields([
+        { name: "images", maxCount: 10 },
+        { name: "videos", maxCount: 3 },
+    ]),
+    async (req, res) => {
+        try {
+            const { title, description, datetime, email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(404).json({ message: "Please Provide username and Password" });
-        }
+            // --- Auth check (same as before)
+            if (!email || !password)
+                return res.status(404).json({ message: "Please Provide username and Password" });
+            if (setEmail !== email || setPassword !== password)
+                return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
 
-        if (setEmail !== email || setPassword !== password) {
-            return res.status(400).json({ message: "Invalid credentials. Please contact the admin." });
-        }
+            // --- Mandatory fields
+            if (!title || !description || !datetime)
+                return res.status(400).json({ error: "All fields are required. Not Posted" });
 
-        if (!title || !description || !datetime) {
-            return res.status(400).json({ error: "All fields are required. Not Posted" });
-        }
+            // 1️⃣ Save news first
+            const news = new News({ title, description, datetime });
+            const savedNews = await news.save();
 
-        // Step 1: Save news entry first
-        const news = new News({ title, description, datetime });
-        const savedNews = await news.save();
+            // 2️⃣ Handle images
+            if (req.files?.images?.length) {
+                const allowedImg = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+                const maxImgSize = 500 * 1024; // 500 KB
 
-        // Step 2: Upload each image one by one if any
-        if (req.files && req.files.length > 0) {
-            const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-            const maxFileSize = 500 * 1024; // 500 KB
-
-            for (const file of req.files) {
-                const { mimetype, size, originalname } = file;
-
-                if (allowedMimeTypes.includes(mimetype) && size <= maxFileSize) {
-                    // ✅ Call one by one
-                    await uploadImage(savedNews._id, file, "jangra-blog");
-                    console.log("Uploaded:", originalname);
-                } else {
-                    console.warn("❌ Skipped:", {
-                        file: originalname,
-                        reason: "Invalid type or size",
-                        type: mimetype,
-                        size: `${(size / 1024).toFixed(2)} KB`
-                    });
+                for (const file of req.files.images) {
+                    const { mimetype, size, originalname } = file;
+                    if (allowedImg.includes(mimetype) && size <= maxImgSize) {
+                        await uploadImage(savedNews._id, file, "jangra-blog"); // ⭐️ your existing helper
+                        console.log("Image uploaded:", originalname);
+                    } else {
+                        console.warn("⛔ Image skipped:", originalname);
+                    }
                 }
             }
-        }
 
-        res.status(200).json({ message: "News saved and images processed." });
-    } catch (err) {
-        console.error("❌ Error saving news:", err);
-        res.status(500).json({ error: err.message });
+            // 3️⃣ Handle videos
+            if (req.files?.videos?.length) {
+                const allowedVid = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
+                const maxVidSize = 20 * 1024 * 1024; // 20 MB
+
+                for (const file of req.files.videos) {
+                    const { mimetype, size, originalname } = file;
+                    if (allowedVid.includes(mimetype) && size <= maxVidSize) {
+                        // 👇 Example Cloudinary helper (resource_type:"video")
+                        await uploadVideo(savedNews._id, file, "jangra-blog");
+                        console.log("Video uploaded:", originalname);
+                    } else {
+                        console.warn("⛔ Video skipped:", originalname);
+                    }
+                }
+            }
+
+            res.status(200).json({ message: "News, images & videos saved successfully." });
+        } catch (err) {
+            console.error("❌ Error saving news:", err);
+            res.status(500).json({ error: err.message });
+        }
     }
-});
+);
+
 
 
 
@@ -353,6 +384,53 @@ app.post("/update-img", upload.single("image"), async (req, res) => {
     }
 
 });
+
+async function uploadVideo(id, file, path) {
+    try {
+        let videoUrl = null;
+
+        if (file) {
+            // ⇢ Upload the video to Cloudinary
+            const result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        resource_type: "video",    // ⭐️ important for videos
+                        folder: path,              // Cloudinary folder
+                        transformation: [
+                            { quality: "auto" }    // auto‑optimize bitrate & codec
+                        ],
+                    },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+
+                // Pipe the in‑memory buffer straight into Cloudinary
+                streamifier.createReadStream(file.buffer).pipe(uploadStream);
+            });
+
+            videoUrl = result.secure_url;
+        }
+        // Temp hai ye optimized-images
+        if (path === "optimized-images") {
+            // unlikely case for videos, but kept for parity
+            await Family.findByIdAndUpdate(
+                id,
+                { image: videoUrl },
+                { new: true }
+            );
+        } else {
+            await News.findByIdAndUpdate(
+                id,
+                { $push: { imageUrls: videoUrl } }, // ✅ append to array
+                { new: true }
+            );
+        }
+    } catch (error) {
+        console.error("Error while uploading and saving video:", error.message);
+    }
+}
 
 
 
@@ -756,22 +834,29 @@ app.post("/api/news/delete", async (req, res) => {
 
 // This function Help to delete Img fron Cloudnary Storage
 
-async function deleteImg(imageUrl) {
+async function deleteImg(mediaUrl) {
     try {
-        console.log("Under Image Dleating Process");
-        // Extract the public_id including folder structure, excluding the version
-        const public_id = imageUrl.split('/upload/')[1].split('/').slice(1).join('/').split('.')[0];
-        console.log(public_id); // Logs: optimized-images/zfjxdea5bouqtntjo1dp
+        console.log("🧹 Deleting media:", mediaUrl);
 
-        // Delete the image using the public_id
-        const result = await cloudinary.uploader.destroy(public_id, { invalidate: true });
+        const public_id = mediaUrl
+            .split('/upload/')[1]
+            .split('/').slice(1).join('/')
+            .split('.')[0];
+
+        const isVideo = /\.(mp4|webm|mov|avi|mkv)$/i.test(mediaUrl); // detect video by extension
+
+        const result = await cloudinary.uploader.destroy(public_id, {
+            resource_type: isVideo ? "video" : "image", // ✅ dynamic type
+            invalidate: true,
+        });
+
         if (result.result === 'ok') {
-            console.log(`Image deleted successfully.`);
+            console.log(`✅ ${isVideo ? "Video" : "Image"} deleted successfully.`);
         } else {
-            console.log(`Failed to delete image. URL: ${imageUrl}, Details: ${JSON.stringify(result)}`);
+            console.log(`❌ Failed to delete. Details: ${JSON.stringify(result)}`);
         }
     } catch (error) {
-        console.log(`Server error while performing deleteImg task. Error: ${error.message}`);
+        console.error(`❗ Error while deleting media: ${error.message}`);
     }
 }
 
